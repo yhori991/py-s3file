@@ -1,6 +1,10 @@
 ## s3file
 A simple utility tool to access s3 object through basic File I/O operations.
 
+## Dependencies
+
+- boto3
+
 ## Installation
 To install s3file, simply use pipenv:
 
@@ -11,6 +15,15 @@ pipenv install s3file
 ## Usage
 
 __Basic File I/O operations__
+
+Open/Close:
+
+```python
+import s3file
+
+fp = s3file.open(path='s3_bucket_name/object_key', mode='r')
+content = fp.read()
+fp.close(
 
 Read:
 
@@ -30,14 +43,7 @@ with s3file.open(path='s3_bucket_name/object_key', mode='w') as fp:
     fp.write('some_string_object')
 ```
 
-Open/Close:
-
-```python
-import s3file
-
-fp = s3file.open(path='s3_bucket_name/object_key', mode='r')
-content = fp.read()
-fp.close()
+)
 ```
 
 __Utility functions__
