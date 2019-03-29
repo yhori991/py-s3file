@@ -23,7 +23,8 @@ import s3file
 
 fp = s3file.open(path='s3_bucket_name/object_key', mode='r')
 content = fp.read()
-fp.close(
+fp.close()
+```
 
 Read:
 
@@ -41,9 +42,6 @@ import s3file
 
 with s3file.open(path='s3_bucket_name/object_key', mode='w') as fp:
     fp.write('some_string_object')
-```
-
-)
 ```
 
 __Utility functions__
