@@ -9,7 +9,7 @@ A simple utility tool to access s3 object through basic File I/O operations.
 To install s3file, simply use pipenv:
 
 ```bash
-pipenv install s3file
+pipenv install py-s3file
 ```
 
 ## Usage
