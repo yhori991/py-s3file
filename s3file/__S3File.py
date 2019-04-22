@@ -2,6 +2,8 @@ import os
 import boto3
 from io import BytesIO, StringIO
 
+__default_cache_dir = '~/Downloads/s3file_cache'
+
 
 s3 = boto3.resource('s3')
 
@@ -62,9 +64,12 @@ class S3File:
         if not any(self.mode == x for x in ['r', 'rb', 'w', 'wb']):
             raise ValueError('mode should be one of `r`, `rb`, `w` or `wb`')
 
-    def read(self):
+    def read(self, n=None):
         if self.mode == 'r' or self.mode == 'rb':
-            return self._fp.read()
+            if n is None:
+                return self._fp.read()
+            else:
+                return self._fp.read(n)
         else:
             raise TypeError("this file object is not readable")
 
@@ -96,7 +101,7 @@ def s3_open(path, mode='rb', cache_dir='/tmp/s3'):
     return S3File(path, mode, cache_dir)
 
 
-def s3_load(path, mode='rb', force_download=False, cache_dir='~/Downloads'):
+def s3_load(path, mode='rb', force_download=False, cache_dir=__default_cache_dir):
     cache_dir = os.path.expanduser(cache_dir)
     path_dir = os.path.split(os.path.join(cache_dir, path))[0]
     os.makedirs(path_dir, exist_ok=True)
@@ -123,7 +128,7 @@ def s3_load(path, mode='rb', force_download=False, cache_dir='~/Downloads'):
         return None
 
 
-def s3_save(path, content, cache_dir='~/Downloads'):
+def s3_save(path, content, cache_dir=__default_cache_dir):
     cache_dir = os.path.expanduser(cache_dir)
     path_dir = os.path.split(os.path.join(cache_dir, path))[0]
     os.makedirs(path_dir, exist_ok=True)
