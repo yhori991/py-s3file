@@ -2,7 +2,8 @@ import os
 import boto3
 from io import BytesIO, StringIO
 
-__default_cache_dir = '~/Downloads/s3file_cache'
+
+__DEFAULT_CACHE_DIR = '~/Downloads/s3file_cache'
 
 
 s3 = boto3.resource('s3')
@@ -65,19 +66,33 @@ class S3File:
             raise ValueError('mode should be one of `r`, `rb`, `w` or `wb`')
 
     def read(self, n=None):
+        # read n bytes into b
         if self.mode == 'r' or self.mode == 'rb':
             if n is None:
-                return self._fp.read()
+                b = self._fp.read()
             else:
-                return self._fp.read(n)
+                b = self._fp.read(n)
         else:
             raise TypeError("this file object is not readable")
 
+        # b => s if needed
+        if self.mode == 'r':
+            return b.decode()
+        elif self.mode == 'rb':
+            return b
+        else:
+            return None
+
     def write(self, content):
-        if self.mode == 'w' or self.mode == 'wb':
+        if self.mode == 'wb' and isinstance(content, bytes):
+            return self._fp.write(content)
+        elif self.mode == 'w' and isinstance(content, str):
             return self._fp.write(content)
         else:
-            raise TypeError("this file object is not writable")
+            if self.mode in ('w', 'wb'):
+                raise TypeError("the content and mode mismatch")
+            else:
+                raise TypeError("this file object is not writable")
 
     def close(self):
         self._fp.close()
@@ -101,7 +116,7 @@ def s3_open(path, mode='rb', cache_dir='/tmp/s3'):
     return S3File(path, mode, cache_dir)
 
 
-def s3_load(path, mode='rb', force_download=False, cache_dir=__default_cache_dir):
+def s3_load(path, mode='rb', force_download=False, cache_dir=__DEFAULT_CACHE_DIR):
     cache_dir = os.path.expanduser(cache_dir)
     path_dir = os.path.split(os.path.join(cache_dir, path))[0]
     os.makedirs(path_dir, exist_ok=True)
@@ -128,23 +143,23 @@ def s3_load(path, mode='rb', force_download=False, cache_dir=__default_cache_dir
         return None
 
 
-def s3_save(path, content, cache_dir=__default_cache_dir):
+def s3_save(path, content, cache_dir=__DEFAULT_CACHE_DIR):
     cache_dir = os.path.expanduser(cache_dir)
     path_dir = os.path.split(os.path.join(cache_dir, path))[0]
     os.makedirs(path_dir, exist_ok=True)
     local = os.path.join(cache_dir, path)
 
     # detect the right `mode` to open the file
-    if type(content) == type(StringIO()):
+    if isinstance(content, str):
         mode = 'w'
-    elif type(content) == type(BytesIO()):
+    elif isinstance(content, bytes):
         mode = 'wb'
     else:
-        raise ValueError(f"content type {type(content)} is not supported")
+        raise ValueError(f"the content type {type(content)} is not supported")
 
     # write the content to the local disk
     with open(local, mode) as fp:
-        fp.write(content.getvalue())
+        fp.write(content)
 
     # upload the content
     s3_upload(local, path)
