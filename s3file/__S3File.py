@@ -1,3 +1,4 @@
+import sys
 import os
 import boto3
 from io import BytesIO, StringIO
@@ -8,7 +9,12 @@ __DEFAULT_CACHE_DIR = '~/Downloads/s3file_cache'
 __DEFAULT_TEMP_DIR = '/tmp/s3file'
 
 
+thismodule = sys.modules[__name__]
 s3 = boto3.resource('s3')
+
+
+def s3_set_profile(profile_name):
+    thismodule.s3 = boto3.session.Session(profile_name=profile_name).resource('s3')
 
 
 def _split_into_bucket_and_key(path):
@@ -136,13 +142,7 @@ def s3_load(path, mode='rb', force_download=False, cache_dir=__DEFAULT_CACHE_DIR
     with open(local, mode) as fp:
         content = fp.read()
 
-    # return StringIO or BytesIO
-    if mode == 'r':
-        return StringIO(content)
-    elif mode == 'rb':
-        return BytesIO(content)
-    else:
-        return None
+    return content
 
 
 def s3_save(path, content, cache_dir=__DEFAULT_CACHE_DIR):
