@@ -1,9 +1,11 @@
 import os
 import boto3
 from io import BytesIO, StringIO
+from binascii import hexlify
 
 
 __DEFAULT_CACHE_DIR = '~/Downloads/s3file_cache'
+__DEFAULT_TEMP_DIR = '/tmp/s3file'
 
 
 s3 = boto3.resource('s3')
@@ -55,14 +57,14 @@ def s3_download(s3_path, local_path):
 
 
 class S3File:
-    def __init__(self, path, mode, tmp='/tmp/s3'):
-        self.mode = mode
+    def __init__(self, path, mode, tmp):
         self.path = path
+        self.mode = mode
         self.tmp = tmp
-        self.local = os.path.join(os.path.expanduser(self.tmp), self.path)
+        self.local = os.path.join(self.tmp, hexlify(self.path.encode()).decode())
         self._fp = None
         # mode assertion
-        if not any(self.mode == x for x in ['r', 'rb', 'w', 'wb']):
+        if not (self.mode in ['r', 'rb', 'w', 'wb']):
             raise ValueError('mode should be one of `r`, `rb`, `w` or `wb`')
 
     def read(self, n=None):
@@ -112,7 +114,7 @@ class S3File:
         self.close()
 
 
-def s3_open(path, mode='rb', cache_dir='/tmp/s3'):
+def s3_open(path, mode='rb', cache_dir=__DEFAULT_TEMP_DIR):
     return S3File(path, mode, cache_dir)
 
 
@@ -129,8 +131,8 @@ def s3_load(path, mode='rb', force_download=False, cache_dir=__DEFAULT_CACHE_DIR
         s3_download(path, local)
 
     # open and read the content
-    if not any(mode == x for x in ['rb', 'r']):
-        raise ValueError('mode needs to be `r` or `rb`')
+    if not mode in ['rb', 'r']:
+        raise ValueError('mode needs to be either `r` or `rb`')
     with open(local, mode) as fp:
         content = fp.read()
 

@@ -46,7 +46,7 @@ with s3file.open(path='s3_bucket_name/object_key', mode='w') as fp:
 
 __Utility functions__
 
-The functions below automatically cache the content on local disk (default: on `~/Downloads`).
+The functions below automatically cache the content on local disk (default: on `~/Downloads/s3file_cache`).
 This allows quick access to the same content for the subsequent function calls.
 
 Load:
