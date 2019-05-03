@@ -7,3 +7,4 @@ __license__ = 'MIT'
 __author__ = 'yhori991'
 __author_email__ = 'yhori991@gmail.com'
 __url__ = 'https://github.com/yhori991/py-s3file'
+
