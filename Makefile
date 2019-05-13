@@ -17,5 +17,5 @@ wheels: requirements
 	pipenv run python setup.py bdist_wheel
 
 test_upload: requirements
-    pipenv run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+    pipenv run twine upload --repository testpypi dist/*
 
