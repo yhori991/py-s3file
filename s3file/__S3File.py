@@ -1,13 +1,10 @@
 import sys
 import os
 import boto3
-from io import BytesIO, StringIO
 from binascii import hexlify
-
 
 __DEFAULT_CACHE_DIR = '~/Downloads/s3file_cache'
 __DEFAULT_TEMP_DIR = '/tmp/s3file'
-
 
 thismodule = sys.modules[__name__]
 s3 = boto3.resource('s3')
@@ -15,6 +12,12 @@ s3 = boto3.resource('s3')
 
 def s3_set_profile(profile_name):
     thismodule.s3 = boto3.session.Session(profile_name=profile_name).resource('s3')
+
+
+def local_xlist(path):
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            yield(os.path.join(root, name))
 
 
 def _split_into_bucket_and_key(path):
@@ -47,19 +50,58 @@ def s3_stream(s3_path):
     return res['Body']
 
 
-def s3_upload(local_path, s3_path):
+def s3_upload_file(local_path, s3_path):
     bucket, key = _split_into_bucket_and_key(s3_path)
     c = s3.meta.client
     c.upload_file(local_path, bucket, Key=key)
 
 
-def s3_download(s3_path, local_path):
-    # setup local path
+def s3_download_file(s3_path, local_path):
+    # setup destination
     os.makedirs(os.path.split(local_path)[0], exist_ok=True)
+
     # do download
     bucket, key = _split_into_bucket_and_key(s3_path)
     b = s3.Bucket(bucket)
     b.download_file(key, local_path)
+
+
+def s3_upload(local_path, s3_path):
+    # sanitization
+    local_path = os.path.abspath(local_path)
+
+    # upload
+    if os.path.isfile(local_path):
+        s3_upload_file(local_path, s3_path)
+    elif os.path.isdir(local_path):
+        for path in local_xlist(local_path):
+            src_path = path
+            rpath = src_path[len(local_path) + 1:]
+            dst_path = os.path.join(s3_path, rpath)
+            # check conditions
+            if not os.path.isfile(src_path):
+                continue
+            # upload
+            s3_upload_file(src_path, dst_path)
+    else:
+        raise ValueError("Invalid path")
+
+
+def s3_download(s3_path, local_path):
+    # sanitization
+    local_path = os.path.abspath(local_path)
+
+    # download
+    for files in s3_xlist(s3_path):
+        # path conversion
+        src_path = files['path']
+        rpath = src_path[len(s3_path) + 1:]
+        if len(rpath) == 0: # => file
+            dst_path = local_path
+        else: # => directory
+            dst_path = os.path.join(local_path, rpath)
+        # download
+        s3_download_file(src_path, dst_path)
 
 
 class S3File:
