@@ -147,7 +147,7 @@ class S3File:
     def close(self):
         self._fp.close()
         if self.mode == 'w' or self.mode == 'wb':
-            s3_upload(self.local, self.path)
+            s3_upload_file(self.local, self.path)
             os.remove(self.local)
 
     def __enter__(self):
@@ -174,9 +174,9 @@ def s3_load(path, mode='rb', force_download=False, cache_dir=__DEFAULT_CACHE_DIR
 
     # download the content if needed
     if force_download:
-        s3_download(path, local)
+        s3_download_file(path, local)
     if not os.path.exists(local):
-        s3_download(path, local)
+        s3_download_file(path, local)
 
     # open and read the content
     if not mode in ['rb', 'r']:
@@ -206,4 +206,4 @@ def s3_save(path, content, cache_dir=__DEFAULT_CACHE_DIR):
         fp.write(content)
 
     # upload the content
-    s3_upload(local, path)
+    s3_upload_file(local, path)
