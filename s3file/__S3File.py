@@ -21,6 +21,8 @@ def local_xlist(path):
 
 
 def _split_into_bucket_and_key(path):
+    if path[:5] == 's3://':
+        path = path[5:]
     bucket, key = '', ''
     path_split = path.split('/')
     bucket = path_split[0]
