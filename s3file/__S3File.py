@@ -1,17 +1,17 @@
 import sys
 import os
 import boto3
-from binascii import hexlify
+from hashlib import md5
 
 __DEFAULT_CACHE_DIR = '~/Downloads/s3file_cache'
 __DEFAULT_TEMP_DIR = '/tmp/s3file'
 
-thismodule = sys.modules[__name__]
+this_module = sys.modules[__name__]
 s3 = boto3.resource('s3')
 
 
 def s3_set_profile(profile_name):
-    thismodule.s3 = boto3.session.Session(profile_name=profile_name).resource('s3')
+    this_module.s3 = boto3.session.Session(profile_name=profile_name).resource('s3')
 
 
 def local_xlist(path):
@@ -20,9 +20,13 @@ def local_xlist(path):
             yield(os.path.join(root, name))
 
 
-def _split_into_bucket_and_key(path):
+def _trim_uri_prefix(path):
     if path[:5] == 's3://':
-        path = path[5:]
+        return path[5:]
+
+
+def _split_into_bucket_and_key(path):
+    path = _trim_uri_prefix(path)
     bucket, key = '', ''
     path_split = path.split('/')
     bucket = path_split[0]
@@ -111,7 +115,7 @@ class S3File:
         self.path = path
         self.mode = mode
         self.tmp = tmp
-        self.local = os.path.join(self.tmp, hexlify(self.path.encode()).decode())
+        self.local = os.path.join(self.tmp, md5(self.path.encode()).hexdigest())
         self._fp = None
         # mode assertion
         if not (self.mode in ['r', 'rb', 'w', 'wb']):
