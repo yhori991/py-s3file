@@ -3,7 +3,7 @@ import os
 import boto3
 from hashlib import md5
 
-__DEFAULT_CACHE_DIR = '~/Downloads/s3file_cache'
+__DEFAULT_CACHE_DIR = '~/Download/s3file_cache'
 __DEFAULT_TEMP_DIR = '/tmp/s3file'
 
 this_module = sys.modules[__name__]
@@ -23,6 +23,7 @@ def local_xlist(path):
 def _trim_uri_prefix(path):
     if path[:5] == 's3://':
         return path[5:]
+    return path
 
 
 def _split_into_bucket_and_key(path):
@@ -169,10 +170,12 @@ class S3File:
 
 
 def s3_open(path, mode='rb', cache_dir=__DEFAULT_TEMP_DIR):
+    path = _trim_uri_prefix(path)
     return S3File(path, mode, cache_dir)
 
 
 def s3_load(path, mode='rb', force_download=False, cache_dir=__DEFAULT_CACHE_DIR):
+    path = _trim_uri_prefix(path)
     cache_dir = os.path.expanduser(cache_dir)
     path_dir = os.path.split(os.path.join(cache_dir, path))[0]
     os.makedirs(path_dir, exist_ok=True)
@@ -194,6 +197,7 @@ def s3_load(path, mode='rb', force_download=False, cache_dir=__DEFAULT_CACHE_DIR
 
 
 def s3_save(path, content, cache_dir=__DEFAULT_CACHE_DIR):
+    path = _trim_uri_prefix(path)
     cache_dir = os.path.expanduser(cache_dir)
     path_dir = os.path.split(os.path.join(cache_dir, path))[0]
     os.makedirs(path_dir, exist_ok=True)
