@@ -41,6 +41,8 @@ def s3_xlist(s3_path):
     c = s3.meta.client
     p = c.get_paginator('list_objects')
     for page in p.paginate(Bucket=bucket, Prefix=key):
+        if 'Contents' not in page.keys():
+            return
         for content in page['Contents']:
             key = content['Key']
             size = content['Size']
