@@ -47,7 +47,7 @@ def s3_xlist(s3_path):
             key = content['Key']
             size = content['Size']
             time = content['LastModified']
-            path = '/'.join([bucket, key])
+            path = 's3://'+'/'.join([bucket, key])
             if size == 0:
                 continue
             yield {'path': path, 'size': size, 'time': time}
